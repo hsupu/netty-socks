@@ -13,6 +13,7 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.socksx.v5.*;
 import io.netty.handler.proxy.Socks5ProxyHandler;
 
+@ChannelHandler.Sharable
 public class Socks5CommandRequestHandler extends SimpleChannelInboundHandler<DefaultSocks5CommandRequest> {
 
     private static final Logger logger = LoggerFactory.getLogger(Socks5CommandRequestHandler.class);
@@ -66,10 +67,5 @@ public class Socks5CommandRequestHandler extends SimpleChannelInboundHandler<Def
         } else {
             ctx.fireChannelRead(msg);
         }
-    }
-
-    @Override
-    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        ctx.fireChannelInactive();
     }
 }
