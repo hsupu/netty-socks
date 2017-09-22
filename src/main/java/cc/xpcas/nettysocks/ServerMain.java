@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import cc.xpcas.nettysocks.config.Address;
 import cc.xpcas.nettysocks.config.SocksProperties;
 import cc.xpcas.nettysocks.initializer.Socks5WorkerChannelInitializer;
+import cc.xpcas.nettysocks.upstream.DirectUpstream;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelOption;
@@ -52,7 +53,8 @@ public class ServerMain {
         SocksProperties socksProperties = new SocksProperties();
 
         socksProperties.setListen(new Address("127.0.0.1", 6000));
-        socksProperties.setUpstream(new Address("127.0.0.1", 1080));
+        socksProperties.setUpstream(new DirectUpstream());
+//        socksProperties.setUpstream(new Socks5Upstream(new Address("127.0.0.1", 1080)));
 
 //        Map<String, String> authMap = new HashMap<>();
 //        authMap.put("username", "password");

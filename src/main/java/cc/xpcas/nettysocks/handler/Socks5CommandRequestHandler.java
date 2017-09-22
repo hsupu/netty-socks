@@ -1,17 +1,14 @@
 package cc.xpcas.nettysocks.handler;
 
-import java.net.*;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cc.xpcas.nettysocks.config.Address;
+import cc.xpcas.nettysocks.upstream.Upstream;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.socksx.v5.*;
-import io.netty.handler.proxy.Socks5ProxyHandler;
 
 @ChannelHandler.Sharable
 public class Socks5CommandRequestHandler extends SimpleChannelInboundHandler<DefaultSocks5CommandRequest> {
@@ -20,9 +17,9 @@ public class Socks5CommandRequestHandler extends SimpleChannelInboundHandler<Def
 
     private final EventLoopGroup forwarders;
 
-    private final Address upstream;
+    private final Upstream<SocketChannel> upstream;
 
-    public Socks5CommandRequestHandler(EventLoopGroup forwarders, Address upstream) {
+    public Socks5CommandRequestHandler(EventLoopGroup forwarders, Upstream<SocketChannel> upstream) {
         this.forwarders = forwarders;
         this.upstream = upstream;
     }
@@ -40,11 +37,10 @@ public class Socks5CommandRequestHandler extends SimpleChannelInboundHandler<Def
 
                         @Override
                         protected void initChannel(SocketChannel channel) throws Exception {
-                            ChannelPipeline pipeline = channel.pipeline();
                             if (upstream != null) {
-                                SocketAddress address = new InetSocketAddress(upstream.getHost(), upstream.getPort());
-                                pipeline.addFirst("proxy", new Socks5ProxyHandler(address));
+                                upstream.initChannel(channel);
                             }
+                            ChannelPipeline pipeline = channel.pipeline();
                             pipeline.addLast("toLocal", new ChannelHandlerContextForwardingHandler(ctx));
                         }
                     });
