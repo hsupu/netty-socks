@@ -21,13 +21,7 @@ public class ChannelFutureForwardingHandler extends ChannelInboundHandlerAdapter
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        dst.channel().writeAndFlush(msg).addListener((ChannelFutureListener) future -> {
-            if (future.isSuccess()) {
-                ctx.read();
-            } else {
-                future.channel().close();
-            }
-        });
+        dst.channel().writeAndFlush(msg).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
     }
 
     @Override

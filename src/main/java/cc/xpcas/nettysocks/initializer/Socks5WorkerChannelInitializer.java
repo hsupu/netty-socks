@@ -1,9 +1,12 @@
 package cc.xpcas.nettysocks.initializer;
 
+import java.util.concurrent.*;
+
 import cc.xpcas.nettysocks.authenticator.BasicAuthenticator;
 import cc.xpcas.nettysocks.config.SocksProperties;
 import cc.xpcas.nettysocks.handler.*;
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.socksx.v5.Socks5CommandRequestDecoder;
@@ -11,6 +14,8 @@ import io.netty.handler.codec.socksx.v5.Socks5InitialRequestDecoder;
 import io.netty.handler.codec.socksx.v5.Socks5PasswordAuthRequestDecoder;
 import io.netty.handler.codec.socksx.v5.Socks5ServerEncoder;
 import io.netty.handler.timeout.IdleStateHandler;
+import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.handler.timeout.WriteTimeoutHandler;
 
 /**
  * @author xp
@@ -38,32 +43,37 @@ public class Socks5WorkerChannelInitializer extends ChannelInitializer<SocketCha
 
     @Override
     protected void initChannel(io.netty.channel.socket.SocketChannel channel) throws Exception {
+        ChannelPipeline pipeline = channel.pipeline();
 
         // 连接管理
-        channel.pipeline().addLast(ConnectionManageHandler.NAME, new ConnectionManageHandler(3000));
+        pipeline.addLast(ConnectionManageHandler.NAME, new ConnectionManageHandler(3000));
 
-        // 超时中断
-        channel.pipeline().addLast(new IdleStateHandler(3, 30, 0));
-        channel.pipeline().addLast(new IdleStateEventHandler());
+        // 空闲超时
+        pipeline.addLast(new IdleStateHandler(3, 30, 0));
+        pipeline.addLast(new IdleStateEventHandler());
+
+        // 读写超时
+        pipeline.addLast(new ReadTimeoutHandler(60, TimeUnit.SECONDS));
+        pipeline.addLast(new WriteTimeoutHandler(30, TimeUnit.SECONDS));
 
         // netty log
-        //channel.pipeline().addLast(new LoggingHandler());
+        //pipeline.addLast(new LoggingHandler());
 
         // 负责将输出的 Socks5Message 转为 ByteBuf
-        channel.pipeline().addLast(Socks5ServerEncoder.DEFAULT);
+        pipeline.addLast(Socks5ServerEncoder.DEFAULT);
 
         // init
-        channel.pipeline().addLast(Socks5InitialRequestDecoder.class.getName(), new Socks5InitialRequestDecoder());
-        channel.pipeline().addLast(Socks5InitialRequestHandler.class.getName(), socks5InitialRequestHandler);
+        pipeline.addLast(Socks5InitialRequestDecoder.class.getName(), new Socks5InitialRequestDecoder());
+        pipeline.addLast(Socks5InitialRequestHandler.class.getName(), socks5InitialRequestHandler);
 
         // auth
         if (socks5PasswordAuthRequestHandler != null) {
-            channel.pipeline().addLast(Socks5PasswordAuthRequestDecoder.class.getName(), new Socks5PasswordAuthRequestDecoder());
-            channel.pipeline().addLast(Socks5PasswordAuthRequestHandler.class.getName(), socks5PasswordAuthRequestHandler);
+            pipeline.addLast(Socks5PasswordAuthRequestDecoder.class.getName(), new Socks5PasswordAuthRequestDecoder());
+            pipeline.addLast(Socks5PasswordAuthRequestHandler.class.getName(), socks5PasswordAuthRequestHandler);
         }
 
         // connection
-        channel.pipeline().addLast(Socks5CommandRequestDecoder.class.getName(), new Socks5CommandRequestDecoder());
-        channel.pipeline().addLast(Socks5CommandRequestHandler.class.getName(), socks5CommandRequestHandler);
+        pipeline.addLast(Socks5CommandRequestDecoder.class.getName(), new Socks5CommandRequestDecoder());
+        pipeline.addLast(Socks5CommandRequestHandler.class.getName(), socks5CommandRequestHandler);
     }
 }
