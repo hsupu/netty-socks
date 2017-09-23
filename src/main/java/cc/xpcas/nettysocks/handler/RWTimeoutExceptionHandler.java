@@ -1,12 +1,12 @@
 package cc.xpcas.nettysocks.handler;
 
+import java.net.*;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.netty.buffer.Unpooled;
-import io.netty.channel.Channel;
+import cc.xpcas.nettysocks.utils.NettyUtils;
 import io.netty.channel.ChannelDuplexHandler;
-import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.timeout.ReadTimeoutException;
 import io.netty.handler.timeout.WriteTimeoutException;
@@ -30,18 +30,18 @@ public class RWTimeoutExceptionHandler extends ChannelDuplexHandler {
     }
 
     private void handleReadTimeout(ChannelHandlerContext ctx) {
-        LOG.info("read timeout");
-        closeOnFlush(ctx.channel());
+        if (LOG.isInfoEnabled()) {
+            SocketAddress remoteAddress = ctx.channel().remoteAddress();
+            LOG.info(remoteAddress + " read timeout");
+        }
+        NettyUtils.closeAfterFlush(ctx);
     }
 
     private void handleWriteTimeout(ChannelHandlerContext ctx) {
-        LOG.info("write timeout");
-        closeOnFlush(ctx.channel());
-    }
-
-    private static void closeOnFlush(Channel channel) {
-        if (channel.isActive()) {
-            channel.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+        if (LOG.isInfoEnabled()) {
+            SocketAddress remoteAddress = ctx.channel().remoteAddress();
+            LOG.info(remoteAddress + " write timeout");
         }
+        NettyUtils.closeAfterFlush(ctx);
     }
 }

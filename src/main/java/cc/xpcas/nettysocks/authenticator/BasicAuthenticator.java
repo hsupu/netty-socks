@@ -3,7 +3,7 @@ package cc.xpcas.nettysocks.authenticator;
 import java.nio.charset.*;
 import java.util.*;
 
-import cc.xpcas.nettysocks.utils.HashUtils;
+import cc.xpcas.nettysocks.utils.DigestUtils;
 
 /**
  * @author xp
@@ -17,7 +17,7 @@ public class BasicAuthenticator implements Authenticator {
     }
 
     private static String encodeValue(String value) {
-        return HashUtils.md5(value.getBytes(StandardCharsets.UTF_8));
+        return DigestUtils.md5AndHex(value.getBytes(StandardCharsets.UTF_8));
     }
 
     public void set(String key, String value) {

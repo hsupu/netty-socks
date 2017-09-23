@@ -2,12 +2,13 @@ package cc.xpcas.nettysocks.initializer;
 
 import java.util.concurrent.*;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import cc.xpcas.nettysocks.authenticator.BasicAuthenticator;
 import cc.xpcas.nettysocks.config.SocksProperties;
 import cc.xpcas.nettysocks.handler.*;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelPipeline;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.socksx.v5.Socks5CommandRequestDecoder;
 import io.netty.handler.codec.socksx.v5.Socks5InitialRequestDecoder;
@@ -22,6 +23,10 @@ import io.netty.handler.timeout.WriteTimeoutHandler;
  */
 public class Socks5WorkerChannelInitializer extends ChannelInitializer<SocketChannel> {
 
+    private static final Logger LOG = LoggerFactory.getLogger(Socks5WorkerChannelInitializer.class);
+
+    private final SocksProperties socksProperties;
+
     private Socks5InitialRequestHandler socks5InitialRequestHandler;
 
     private Socks5PasswordAuthRequestHandler socks5PasswordAuthRequestHandler;
@@ -29,6 +34,8 @@ public class Socks5WorkerChannelInitializer extends ChannelInitializer<SocketCha
     private Socks5CommandRequestHandler socks5CommandRequestHandler;
 
     public Socks5WorkerChannelInitializer(SocksProperties socksProperties, EventLoopGroup forwarders) {
+        this.socksProperties = socksProperties;
+
         // 先初始化 shared handlers
         socks5InitialRequestHandler = new Socks5InitialRequestHandler(socksProperties.isAuth());
         if (socksProperties.isAuth()) {
@@ -49,12 +56,12 @@ public class Socks5WorkerChannelInitializer extends ChannelInitializer<SocketCha
         pipeline.addLast(ConnectionManageHandler.NAME, new ConnectionManageHandler(3000));
 
         // 空闲超时
-        pipeline.addLast(new IdleStateHandler(3, 30, 0));
+        pipeline.addLast(new IdleStateHandler(10, 10, 0));
         pipeline.addLast(new IdleStateEventHandler());
 
         // 读写超时
-        pipeline.addLast(new ReadTimeoutHandler(60, TimeUnit.SECONDS));
-        pipeline.addLast(new WriteTimeoutHandler(30, TimeUnit.SECONDS));
+        pipeline.addLast(new ReadTimeoutHandler(socksProperties.getReadTimeoutMillis(), TimeUnit.MILLISECONDS));
+        pipeline.addLast(new WriteTimeoutHandler(socksProperties.getWriteTimeoutMillis(), TimeUnit.MILLISECONDS));
 
         // netty log
         //pipeline.addLast(new LoggingHandler());

@@ -20,9 +20,13 @@ public class SocksProperties {
 
     private Map<String, String> authMap;
 
-    private int acceptors = 4;
+    private int acceptors = 2;
 
-    private int backlog = 1024;
+    private int backlog = 128;
 
     private int connectTimeoutMillis = 3000;
+
+    private int readTimeoutMillis = 30000;
+
+    private int writeTimeoutMillis = 10000;
 }
