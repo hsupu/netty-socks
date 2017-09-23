@@ -1,4 +1,4 @@
-# netty-socks5
+# netty-socks
 
 A netty4-based socks5 repeater/server and shadowsocks repeater.
 
