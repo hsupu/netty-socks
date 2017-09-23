@@ -8,13 +8,15 @@ Second, shadowsocks protocol is added to extend its usage scenario. And it also 
 
 ## Features
 
-- support socks5 protocol
-- support shadowsocks protocol
+- support listening with socks5 protocol
+- support accessing target directly
+- support be proxied through socks5 protocol
+- support be proxied through shadowsocks protocol
 - support IPv6
-- support forwarding to another socks5 proxy
 
 ## TODO
 
-- support SSL protocol
+- support be proxied through SSL protocol
 - support UDP
 - optimize performance
+- support PAC
